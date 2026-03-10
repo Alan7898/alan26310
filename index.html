@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>智能中式海报生成器 - 移动端</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Noto Serif SC', 'SimSun', '宋体', serif;
+            background: linear-gradient(135deg, #f5f0e8 0%, #e8e0d5 100%);
+            min-height: 100vh;
+            padding: 15px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-top: 10px;
+        }
+
+        .header h1 {
+            color: #8b4513;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .section {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .section h2 {
+            color: #8b4513;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #d4a574;
+            padding-bottom: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #5c4033;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #d4a574;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 14px;
+            transition: all 0.3s;
+            background: #faf8f5;
+            min-height: 150px;
+            resize: vertical;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #8b4513;
+            box-shadow: 0 0 0 3px rgba(139, 69, 19, 0.1);
+        }
+
+        .btn {
+            background: #c41e3a;
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+            display: block;
+        }
+
+        .btn:hover {
+            background: #a01830;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(196, 30, 58, 0.3);
+        }
+
+        .btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #8b4513;
+        }
+
+        .btn-secondary:hover {
+            background: #6d3410;
+        }
+
+        .status {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .status.loading {
+            display: block;
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status.success {
+            display: block;
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status.error {
+            display: block;
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .image-preview {
+            margin-top: 10px;
+            position: relative;
+            display: inline-block;
+        }
+
+        .image-preview img {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 6px;
+            border: 2px solid #d4a574;
+        }
+
+        .remove-btn {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            width: 24px;
+            height: 24px;
+            background: #c41e3a;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .remove-btn:hover {
+            background: #a01830;
+            transform: scale(1.1);
+        }
+
+        .poster {
+            width: 100%;
+            background: #faf8f5;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .poster-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.15;
+            z-index: 0;
+        }
+
+        .poster-header-img {
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .poster-content {
+            padding: 15px 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .poster-section {
+            margin-bottom: 15px;
+        }
+
+        .section-title {
+            font-size: 14px;
+            color: #5c4033;
+            font-weight: bold;
+            margin-bottom: 6px;
+            padding-left: 8px;
+            border-left: 3px solid #c41e3a;
+        }
+
+        .section-content {
+            font-size: 12px;
+            line-height: 1.6;
+            color: #4a3728;
+            text-align: justify;
+        }
+
+        .user-image-container {
+            margin-top: 15px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .user-image {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 6px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .poster-footer-img {
+            width: 100%;
+            display: block;
+            position: relative;
+            z-index: 1;
+        }
+
+        .download-section {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 480px) {
+            body {
+                padding: 10px;
+            }
+            
+            .section {
+                padding: 15px;
+            }
+            
+            .header h1 {
+                font-size: 20px;
+            }
+            
+            .section h2 {
+                font-size: 16px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 智能海报生成器</h1>
+        </div>
+
+        <!-- 输入区域 -->
+        <div class="section">
+            <h2>输入内容</h2>
+            
+            <div class="form-group">
+                <label>请输入任意内容（AI将自动分析）</label>
+                <textarea id="inputContent" placeholder="请输入您想要生成海报的内容..."></textarea>
+            </div>
+            
+            <div class="form-group">
+                <label>上传海报图片（可选）</label>
+                <input type="file" id="imageUpload" accept="image/*" onchange="handleImageUpload(event)" style="display: none;">
+                <button class="btn btn-secondary" onclick="document.getElementById('imageUpload').click()">
+                    📷 选择图片
+                </button>
+                <div id="imagePreview" class="image-preview" style="display: none;">
+                    <img id="previewImg" src="" alt="预览">
+                    <button class="remove-btn" onclick="removeImage()">✕</button>
+                </div>
+            </div>
+            
+            <button class="btn" id="analyzeBtn" onclick="analyzeContent()">
+                🤖 智能分析并生成海报
+            </button>
+            
+            <div class="status" id="status"></div>
+        </div>
+
+        <!-- 海报预览 -->
+        <div class="section">
+            <h2>海报预览</h2>
+            <div class="poster" id="poster">
+                <!-- 背景图 -->
+                <img id="bgImage" src="" class="poster-bg" alt="背景" crossorigin="anonymous">
+                
+                <!-- 顶部装饰图 -->
+                <img id="headerImage" src="" class="poster-header-img" alt="顶部装饰" crossorigin="anonymous">
+                
+                <div class="poster-content">
+                    <div class="poster-section">
+                        <div class="section-title" id="posterSection1Title">基础信息</div>
+                        <div class="section-content" id="posterSection1Content">
+                            请在上方输入内容，点击"智能分析并生成海报"按钮
+                        </div>
+                    </div>
+                    
+                    <div class="poster-section">
+                        <div class="section-title" id="posterSection2Title">核心结论</div>
+                        <div class="section-content" id="posterSection2Content">
+                            等待分析...
+                        </div>
+                    </div>
+                    
+                    <div class="poster-section">
+                        <div class="section-title" id="posterSection3Title">后续发展</div>
+                        <div class="section-content" id="posterSection3Content">
+                            等待分析...
+                        </div>
+                    </div>
+                    
+                    <!-- 用户上传的图片区域 -->
+                    <div class="user-image-container" id="userImageContainer" style="display: none;">
+                        <img id="posterUserImage" src="" alt="用户图片" class="user-image">
+                    </div>
+                </div>
+                
+                <!-- 底部装饰图 -->
+                <img id="footerImage" src="" class="poster-footer-img" alt="底部装饰" crossorigin="anonymous">
+            </div>
+        </div>
+
+        <!-- 下载区域 -->
+        <div class="download-section">
+            <button class="btn" onclick="downloadPoster()">
+                📥 下载海报
+            </button>
+        </div>
+    </div>
+
+    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
+    <script>
+        const API_URL = 'https://open.bigmodel.cn/api/anthropic';
+        const API_KEY = 'f5f2945d7ac447efbb20e750b319d387.OAkSLKKwbH5On7FG';
+
+        let uploadedImageData = null;
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    uploadedImageData = e.target.result;
+                    
+                    // 显示预览
+                    document.getElementById('previewImg').src = uploadedImageData;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    
+                    // 更新海报中的图片
+                    document.getElementById('posterUserImage').src = uploadedImageData;
+                    document.getElementById('userImageContainer').style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeImage() {
+            uploadedImageData = null;
+            document.getElementById('imageUpload').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('userImageContainer').style.display = 'none';
+        }
+
+        async function analyzeContent() {
+            const inputContent = document.getElementById('inputContent').value.trim();
+            
+            if (!inputContent) {
+                showStatus('请输入内容后再进行分析', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('analyzeBtn');
+            btn.disabled = true;
+            btn.textContent = '🔄 分析中...';
+            showStatus('正在调用AI分析内容，请稍候...', 'loading');
+
+            try {
+                const response = await fetch(`${API_URL}/v1/messages`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-API-Key': API_KEY,
+                        'anthropic-version': '2023-06-01'
+                    },
+                    body: JSON.stringify({
+                        model: 'claude-3-5-sonnet-20241022',
+                        max_tokens: 1024,
+                        messages: [{
+                            role: 'user',
+                            content: `请分析以下内容，提取主题和正文信息，并按照以下格式返回JSON：
+
+内容：
+${inputContent}
+
+请返回以下格式的JSON（不要包含markdown代码块标记）：
+{
+  "section1Title": "第一栏标题（概括基础信息或背景，不超过6个字）",
+  "section1Content": "第一栏内容（详细的基础信息或背景描述，不超过180字）",
+  "section2Title": "第二栏标题（概括核心结论或要点，不超过6个字）",
+  "section2Content": "第二栏内容（详细的结论或要点，不超过180字）",
+  "section3Title": "第三栏标题（概括后续发展或建议，不超过6个字）",
+  "section3Content": "第三栏内容（详细的发展或建议，不超过180字）"
+}
+
+注意：
+1. 根据内容的实际情况，合理分配三个栏目的内容
+2. 如果内容较少，可以适当扩展
+3. 如果内容较多，请提炼关键信息
+4. 标题必须简洁有力，严格控制在6个字以内
+5. 正文内容必须详细完整，严格控制在180字以内
+6. 直接返回JSON，不要包含任何其他文字`
+                        }]
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API请求失败: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const content = data.content[0].text;
+                
+                // 尝试解析JSON
+                let result;
+                try {
+                    // 移除可能的markdown代码块标记
+                    let jsonStr = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+                    result = JSON.parse(jsonStr);
+                } catch (e) {
+                    console.error('JSON解析错误:', e);
+                    throw new Error('AI返回的数据格式不正确');
+                }
+
+                // 字数限制处理函数
+                function limitText(text, maxLength) {
+                    if (!text) return '';
+                    return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
+                }
+
+                // 更新海报内容（应用字数限制）
+                document.getElementById('posterSection1Title').textContent = limitText(result.section1Title, 6) || '基础信息';
+                document.getElementById('posterSection1Content').innerHTML = limitText(result.section1Content, 180).replace(/\n/g, '<br>') || '暂无内容';
+                
+                document.getElementById('posterSection2Title').textContent = limitText(result.section2Title, 6) || '核心结论';
+                document.getElementById('posterSection2Content').innerHTML = limitText(result.section2Content, 180).replace(/\n/g, '<br>') || '暂无内容';
+                
+                document.getElementById('posterSection3Title').textContent = limitText(result.section3Title, 6) || '后续发展';
+                document.getElementById('posterSection3Content').innerHTML = limitText(result.section3Content, 180).replace(/\n/g, '<br>') || '暂无内容';
+
+                showStatus('✅ 海报生成成功！', 'success');
+            } catch (error) {
+                console.error('分析错误:', error);
+                showStatus(`❌ 分析失败: ${error.message}`, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🤖 智能分析并生成海报';
+            }
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = 'status ' + type;
+        }
+
+        async function downloadPoster() {
+            const poster = document.getElementById('poster');
+            try {
+                showStatus('正在生成海报图片...', 'loading');
+                
+                // 强制重新加载所有图片，确保它们可以被canvas绘制
+                const images = poster.querySelectorAll('img');
+                const reloadPromises = Array.from(images).map(img => {
+                    return new Promise((resolve) => {
+                        // 如果图片已经有src，先清空再重新设置
+                        const originalSrc = img.src;
+                        if (originalSrc) {
+                            img.src = '';
+                            setTimeout(() => {
+                                img.src = originalSrc;
+                                img.onload = () => resolve();
+                                img.onerror = () => resolve();
+                                setTimeout(() => resolve(), 3000);
+                            }, 100);
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+                
+                await Promise.all(reloadPromises);
+                
+                // 等待更长时间确保所有图片完全加载
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                
+                const canvas = await html2canvas(poster, {
+                    scale: 2,
+                    backgroundColor: '#faf8f5',
+                    useCORS: true,
+                    allowTaint: true,
+                    logging: true,
+                    imageTimeout: 30000,
+                    onclone: function(clonedDoc) {
+                        // 在克隆的文档中确保图片已加载
+                        const clonedImages = clonedDoc.querySelectorAll('img');
+                        clonedImages.forEach(img => {
+                            img.crossOrigin = 'anonymous';
+                        });
+                    }
+                });
+                
+                // 转换为JPG格式
+                canvas.toBlob(function(blob) {
+                    if (!blob) {
+                        throw new Error('Canvas转换失败');
+                    }
+                    
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    const timestamp = new Date().getTime();
+                    link.download = `中式海报_${timestamp}.jpg`;
+                    link.href = url;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    URL.revokeObjectURL(url);
+                    
+                    showStatus('✅ 海报下载成功！', 'success');
+                }, 'image/jpeg', 0.95);
+                
+            } catch (error) {
+                console.error('下载错误详情:', error);
+                const errorMsg = error.message || '未知错误';
+                showStatus(`❌ 下载失败: ${errorMsg}`, 'error');
+                
+                // 尝试备用方案
+                setTimeout(() => {
+                    if (confirm('下载失败，是否尝试在新窗口中打开海报？\n（您可以长按保存图片）')) {
+                        const poster = document.getElementById('poster');
+                        html2canvas(poster, {
+                            scale: 2,
+                            backgroundColor: '#faf8f5',
+                            useCORS: true,
+                            allowTaint: true,
+                            logging: true,
+                            imageTimeout: 30000
+                        }).then(canvas => {
+                            const win = window.open();
+                            win.document.write('<img src="' + canvas.toDataURL('image/jpeg', 0.95) + '"/>');
+                        });
+                    }
+                }, 500);
+            }
+        }
+
+        // 图片加载函数 - 预加载确保图片完全加载
+        function preloadImage(url) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error('图片加载失败: ' + url));
+                img.src = url;
+            });
+        }
+
+        // 页面加载完成后加载图片
+        window.onload = function() {
+            // 预加载所有图片
+            const imageUrls = [
+                { id: 'bgImage', url: 'https://img000001.oss-cn-beijing.aliyuncs.com/images/bg.png' },
+                { id: 'headerImage', url: 'https://img000001.oss-cn-beijing.aliyuncs.com/images/header.png' },
+                { id: 'footerImage', url: 'https://img000001.oss-cn-beijing.aliyuncs.com/images/footer.png' }
+            ];
+            
+            imageUrls.forEach(({ id, url }) => {
+                const imgElement = document.getElementById(id);
+                if (imgElement) {
+                    imgElement.crossOrigin = 'anonymous';
+                    imgElement.src = url;
+                }
+            });
+        };
+    </script>
+</body>
+</html>
